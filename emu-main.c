@@ -27,6 +27,10 @@
 #endif
 #define MAINLOOP_TIMER 10000
 static int mainloop_count = 0;
+#ifdef I80C18X
+#include "emu-80c18x.h"
+#include "sd-or566.h"
+#endif
 
 static int file_load (addr_t start, char * path)
 	{
@@ -88,6 +92,31 @@ static int file_load (addr_t start, char * path)
 //------------------------------------------------------------------------------
 // Debug procedure
 //------------------------------------------------------------------------------
+void dump_mem(const char* path)
+{
+	FILE* fd = fopen (path, "wb+");
+	if (fd < 0)
+	{
+		printf("%s: cannot open out file at '%s'\n", __func__, path);
+		return;
+	}
+
+	byte_t * mem_start = mem_get_addr(0);
+
+	ssize_t count = fwrite(mem_start, 1, MEM_MAX, fd);
+
+	if (count != MEM_MAX)
+	{
+		printf("%s: error writing %d bytes!\n", __func__, MEM_MAX);
+	}
+	else
+	{
+		printf("%s: success writing %d bytes!\n", __func__, MEM_MAX);
+	}
+	fclose(fd);
+}
+
+// Program main
 
 static op_desc_t _op_desc;
 
@@ -128,12 +157,11 @@ static int debug_proc ()
 			putchar ('>');
 			fflush(stdout);
 			char * res = fgets (command, 8, stdin);
+			con_raw();
 			if (!res) {
 				err = -1;
 				break;
 				}
-
-			con_raw();
 
 			switch (command [0])
 				{
@@ -197,6 +225,17 @@ static int debug_proc ()
 					_flag_exec = 0;
 					err = exec_int (0x08);  // timer 0 interrupt
 					if (err) puts ("error: timer interrupt");
+					break;
+				// 
+				case 'd':
+					_flag_exec = 0;
+					dump_mem("memory.bin");
+					break;
+
+				// 
+				case 'z':
+					_flag_exec = 0;
+					mem_print(0xfd00, 0x5044, 0x5050);
 					break;
 
 				}  // command switch
@@ -588,6 +627,9 @@ int main (int argc, char * argv [])
 		{
 		mem_io_reset ();
 		proc_reset ();
+#ifdef I80C18X
+		mem_io_80c18x_reset ();
+#endif
 
 		// LUTs auto check
 
@@ -690,6 +732,7 @@ int main (int argc, char * argv [])
 	rom_term ();
 	con_term ();
 	serial_term ();
+	printf("\n%s: exit! (code=%d)\n", __func__, err);
 
 	return (err >= 0) ? EXIT_SUCCESS : EXIT_FAILURE;
 	}

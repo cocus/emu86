@@ -4,7 +4,8 @@
 # elks:    minimal PC to run ELKS
 # advtech: Advantech SNMP-1000 SBC
 
-TARGET=elks
+TARGET=or566
+#TARGET=elks
 #TARGET=advtech
 
 # Platform selection

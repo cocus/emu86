@@ -97,6 +97,12 @@ endif
 
 ifeq ($(TARGET), elks)
 CFLAGS += -DELKS
+else
+ifeq ($(TARGET), or566)
+EMU86_OBJS += emu-80c18x.o sd-or566.o
+EMU86_HDRS += emu-80c18x.h
+CFLAGS += -DI80C18X -DPCB_BASE=0x0000
+endif
 endif
 
 EMU86_OBJS += \

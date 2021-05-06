@@ -926,7 +926,7 @@ int exec_int (byte_t i)
 
 	// Try emulator handler first
 
-	if (info_level & 2) printf("[INT %02xh AX=%04x]\n", i, reg16_get(REG_AX));
+	if (info_level & 2 && i != 0x10) printf("[INT %02xh AX=%04x DX=%04x from %04x:%04x]\n", i, reg16_get(REG_AX), reg16_get(REG_DX), seg_get(SEG_CS), reg16_get(REG_IP));
 	err = int_hand (i);
 	if (err > 0) {
 		// Check interrupt vector
@@ -1378,7 +1378,8 @@ static int op_flag_acc (op_desc_t * op_desc)
 static int op_halt (op_desc_t * op_desc)
 	{
 	assert (OP_ID == OP_HLT);
-	return 0;
+	printf("!! hlt !!!\n");
+	return -1;
 	}
 
 // No operation
